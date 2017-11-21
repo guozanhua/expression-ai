@@ -99,3 +99,14 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# weights
+*.h5
+
+# images
+*.jpg
+*.jpeg
+*.png
+
+# data
+*.csv
