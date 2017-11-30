@@ -4,6 +4,7 @@ import numpy as np
 import cv2
 from keras.models import model_from_json
 from keras.optimizers import SGD
+from utils import format_image
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -21,44 +22,6 @@ emotion = {0: 'anger', 1: 'disgust',
            2: 'fear', 3: 'happy',
            4: 'sad', 5: 'surprise', 6: 'neutral'}
 
-
-def format_image(image):
-  if len(image.shape) > 2 and image.shape[2] == 3:
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-  else:
-    image = cv2.imdecode(image, cv2.CV_LOAD_IMAGE_GRAYSCALE)
-  faces = face_cascade.detectMultiScale(
-      image,
-      scaleFactor=1.3,
-      minNeighbors=5
-  )
-  # None is we don't found an image
-  if not len(faces) > 0:
-    return None
-  max_area_face = faces[0]
-  for face in faces:
-    if face[2] * face[3] > max_area_face[2] * max_area_face[3]:
-      max_area_face = face
-  # Chop image to face
-  face = max_area_face
-  image = image[face[1]:(face[1] + face[2]),
-                face[0]:(face[0] + face[3])]
-
-  # Resize image to network size
-  try:
-    image = cv2.resize(image, (SIZE_FACE, SIZE_FACE),
-                       interpolation=cv2.INTER_CUBIC) / 255.
-    # while True:
-    #   cv2.imshow("frame", image)
-    #   if cv2.waitKey(1) & 0xFF == ord('q'):
-    #     break
-  except Exception:
-    print("[+] Problem during resize")
-    return None
-  # cv2.imshow("Lol", image)
-  # cv2.waitKey(0)
-  return image
-
 # LOAD MODEL
 model_architecture = './emotion_recog.json'
 model_weights = './emotion_recog_weights.h5'
@@ -71,7 +34,7 @@ while cap.isOpened():
   ret, img = cap.read()
   # img = cv2.imread(img)
   gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-  feed = np.resize(np.array([format_image(img)]),
+  feed = np.resize(np.array([format_image(face_cascade, img)]),
                    (1, SIZE_FACE, SIZE_FACE, 1))
   model.compile(loss='categorical_crossentropy', optimizer=optim,
                 metrics=['accuracy'])
